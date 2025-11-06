@@ -2,11 +2,10 @@
 
 This custom MegaLinter aims to have an optimized Docker image size.
 
-It is built from official MegaLinter images, but is maintained on git@github.com:mckraken/megalinter-custom-flavor-iac-md-py by McKraken
+It is built from official MegaLinter images, but is maintained on https://github.com/mckraken/megalinter-custom-flavor-iac-md-py by McKraken
 
 ## Embedded linters
 
-  - [ARM_ARM_TTK](https://megalinter.io/latest/descriptors/arm_arm_ttk/)
   - [BICEP_BICEP_LINTER](https://megalinter.io/latest/descriptors/bicep_bicep_linter/)
   - [CLOUDFORMATION_CFN_LINT](https://megalinter.io/latest/descriptors/cloudformation_cfn_lint/)
   - [JSON_JSONLINT](https://megalinter.io/latest/descriptors/json_jsonlint/)
@@ -26,8 +25,8 @@ It is built from official MegaLinter images, but is maintained on git@github.com
 
 Follow [MegaLinter installation guide](https://megalinter.io/latest/install-assisted/), and replace related elements in the workflow.
 
-- GitHub Action: On MegaLinter step in .github/workflows/mega-linter.yml, define `uses: git@github.com:mckraken/megalinter-custom-flavor-iac-md-py@main`
-- Docker image: Replace official MegaLinter image with `ghcr.io/git@github.com:mckraken/megalinter-custom-flavor-iac-md-py/megalinter-custom-flavor:latest`
+- GitHub Action: On MegaLinter step in .github/workflows/mega-linter.yml, define `uses: mckraken/megalinter-custom-flavor-iac-md-py@main`
+- Docker image: Replace official MegaLinter image with `ghcr.io/mckraken/megalinter-custom-flavor-iac-md-py/megalinter-custom-flavor:latest`
 
 ## How the flavor is generated and updated
 
@@ -78,7 +77,7 @@ See [full Custom Flavors documentation](https://megalinter.io/beta/custom-flavor
 
 Follow [MegaLinter installation guide](https://megalinter.io/latest/install-assisted/), and replace related elements in the workflow.
 
-- **GitHub Action**: On MegaLinter step in `.github/workflows/mega-linter.yml`, define `uses: git@github.com:mckraken/megalinter-custom-flavor-iac-md-py@main`
-- **Docker image**: Replace official MegaLinter image with `ghcr.io/git@github.com:mckraken/megalinter-custom-flavor-iac-md-py/megalinter-custom-flavor:latest`
+- **GitHub Action**: On MegaLinter step in `.github/workflows/mega-linter.yml`, define `uses: mckraken/megalinter-custom-flavor-iac-md-py@main`
+- **Docker image**: Replace official MegaLinter image with `ghcr.io/mckraken/megalinter-custom-flavor-iac-md-py/megalinter-custom-flavor:latest`
 
 [![MegaLinter is graciously provided by OX Security](https://raw.githubusercontent.com/oxsecurity/megalinter/main/docs/assets/images/ox-banner.png)](https://www.ox.security/?ref=megalinter)

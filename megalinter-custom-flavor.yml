@@ -3,7 +3,6 @@
 
 label: ee-pod-iac-md-py
 linters:
-  - ARM_ARM_TTK
   - BICEP_BICEP_LINTER
   - CLOUDFORMATION_CFN_LINT
   - JSON_JSONLINT
