@@ -1,3 +1,4 @@
+---
 name: "MegaLinter Custom Flavor: ee-pod-iac-md-py"
 author: "McKraken"
 description: "MegaLinter Custom Flavor ee-pod-iac-md-py"
@@ -8,9 +9,6 @@ runs:
   using: "docker"
   # You can manually update the Docker image version here, or use the latest tag
   image: "docker://ghcr.io/mckraken/megalinter-custom-flavor-iac-md-py/megalinter-custom-flavor:latest"
-  args:
-    - "-v"
-    - "/var/run/docker.sock:/var/run/docker.sock:rw"
 branding:
   icon: "check"
   color: "green"
