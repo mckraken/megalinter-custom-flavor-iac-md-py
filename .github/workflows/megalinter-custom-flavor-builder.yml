@@ -164,6 +164,24 @@ jobs:
           CUSTOM_FLAVOR_BUILD_USER: ${{ github.actor }}
 
       # LOCAL TWEAK (re-apply after `npx mega-linter-runner --custom-flavor-setup`):
+      # The custom-builder derives the PUBLISHED image tag from the built image's
+      # version label, which inherits from the base image (builder_tag) — so with a
+      # builder-base override it publishes under the base's tag (e.g. `beta`), not
+      # release-version. Re-tag the just-built image so it is also available under
+      # release-version. Only runs when the two differ (i.e. an override was used).
+      - name: Re-tag published image as release-version
+        if: ${{ success() && inputs.release-version != '' && steps.determine-tag.outputs.builder_tag != inputs.release-version }}
+        env:
+          REPO: ${{ steps.lowercase-repo.outputs.repo }}
+          SRC_TAG: ${{ steps.determine-tag.outputs.builder_tag }}
+          REL: ${{ inputs.release-version }}
+        run: |
+          IMG="ghcr.io/${REPO}/megalinter-custom-flavor"
+          echo "Re-tagging ${IMG}:${SRC_TAG} -> ${IMG}:${REL}"
+          docker buildx imagetools create --tag "${IMG}:${REL}" "${IMG}:${SRC_TAG}"
+          echo "Published ${IMG}:${REL}"
+
+      # LOCAL TWEAK (re-apply after `npx mega-linter-runner --custom-flavor-setup`):
       # When release-version is supplied on a manual dispatch, create a git tag so
       # Dependabot (github-actions) sees this version in consumer repos. Creating
       # a tag ref (not a GitHub Release) does NOT emit a `release` event, so the
