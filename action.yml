@@ -7,8 +7,11 @@ outputs:
     description: "0 if no source file has been updated, 1 if source files has been updated"
 runs:
   using: "docker"
-  # You can manually update the Docker image version here, or use the latest tag
-  image: "docker://ghcr.io/mckraken/megalinter-custom-flavor-iac-md-py/megalinter-custom-flavor:latest"
+  # Pinned to :v10.0.1 (interim release built on the beta base for tofu-fmt/
+  # tofu-validate) so `uses: ...@v10.0.1` pulls the matching image. main stays
+  # on :latest; only this tagged commit is pinned. See README "Interim release
+  # on a pre-release base" for why this needs a manual pin.
+  image: "docker://ghcr.io/mckraken/megalinter-custom-flavor-iac-md-py/megalinter-custom-flavor:v10.0.1"
 branding:
   icon: "check"
   color: "green"
