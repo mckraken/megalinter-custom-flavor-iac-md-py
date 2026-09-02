@@ -115,6 +115,27 @@ The workflow publishes the image under `release-version` but builds it from the
 `release-version`. A bare tag push does not emit a `release` event, so the build
 does not re-trigger itself.
 
+**Caveat — `action.yml` still says `:latest`.** `mega-linter-runner`'s generator
+hardcodes the image tag in `action.yml` at `:latest` (there is no flag or env var
+to change it — filed upstream as [oxsecurity/mega-linter-runner#TBD](#)). So the
+tag this workflow creates does **not**, by itself, make `uses:
+mckraken/...@release-version` pull the image built for that release — it pulls
+whatever `:latest` currently is. If a consumer needs the pinned image via
+`uses:`, pin it by hand after the workflow run:
+
+```bash
+git fetch --tags
+git checkout release-version           # e.g. v10.0.1
+sed -i 's#\(megalinter-custom-flavor\):[A-Za-z0-9._-]\+#\1:release-version#' action.yml
+git commit -am "release release-version: pin action.yml image"
+git tag -f release-version              # move the tag onto this commit
+git push --force origin refs/tags/release-version
+```
+
+(Substitute the actual version for `release-version` in both the sed target and
+the tag name.) This is a manual, one-off step for the rare interim-release path;
+it is not automated in the workflow.
+
 Once the upstream stable release that includes the linter ships, the daily
 `check-new-megalinter-version` sync builds it on the real base and Dependabot
 bumps consumers from the interim tag to the stable one — at which point the
