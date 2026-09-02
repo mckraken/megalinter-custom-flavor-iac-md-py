@@ -183,25 +183,51 @@ jobs:
 
       # LOCAL TWEAK (re-apply after `npx mega-linter-runner --custom-flavor-setup`):
       # When release-version is supplied on a manual dispatch, create a git tag so
-      # Dependabot (github-actions) sees this version in consumer repos. Creating
-      # a tag ref (not a GitHub Release) does NOT emit a `release` event, so the
-      # `on: release` trigger above is not re-fired (no double build). Dependabot
-      # tracks the git tag; a Release would re-trigger this workflow.
+      # Dependabot (github-actions) sees this version in consumer repos.
+      #
+      # The tag points at a SIDE COMMIT (not on main) whose action.yml image is
+      # pinned to :release-version. Reason: the generated action.yml hardcodes
+      # :latest (mega-linter-runner sets it unconditionally), so `uses: ...@<tag>`
+      # would otherwise pull :latest, not the image built for this release. main
+      # deliberately keeps :latest for @main users; only this tagged commit is
+      # pinned. The side commit is made locally and never pushed as a branch —
+      # only the tag ref is pushed, so main is untouched.
+      #
+      # Creating a tag ref (not a GitHub Release) does NOT emit a `release` event,
+      # so the `on: release` trigger above is not re-fired (no double build).
       - name: Create git tag for Dependabot (interim release)
         if: ${{ success() && inputs.release-version != '' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
+          REPO: ${{ steps.lowercase-repo.outputs.repo }}
           REL: ${{ inputs.release-version }}
-          SHA: ${{ github.sha }}
         run: |
-          # Create a lightweight tag ref via the API (uses GH_TOKEN). This creates
-          # only a git tag, not a GitHub Release, so `on: release` is not re-fired.
-          if gh api "repos/${REPO}/git/ref/tags/${REL}" >/dev/null 2>&1; then
+          if git ls-remote --exit-code --tags origin "refs/tags/${REL}" >/dev/null 2>&1; then
             echo "Tag ${REL} already exists; skipping tag creation."
             exit 0
           fi
-          gh api "repos/${REPO}/git/refs" \
-            -f "ref=refs/tags/${REL}" \
-            -f "sha=${SHA}"
-          echo "Created git tag ${REL} at ${SHA} (no release event emitted)."
+
+          IMG="ghcr.io/${REPO}/megalinter-custom-flavor"
+
+          # Pin action.yml's image tag to :release-version (replace whatever tag
+          # suffix is on the image reference — do not assume it is `latest`).
+          sed -E -i "s|(${IMG}):[A-Za-z0-9._-]+|\1:${REL}|" action.yml
+          if ! grep -q "${IMG}:${REL}" action.yml; then
+            echo "::error::Failed to pin action.yml image to ${IMG}:${REL}"
+            exit 1
+          fi
+          echo "Pinned action.yml image -> ${IMG}:${REL}"
+
+          # Commit locally (a side commit; the branch is never pushed) and tag it.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add action.yml
+          git commit -m "release ${REL}: pin action.yml image to :${REL}"
+          git tag -a "${REL}" -m "Custom flavor ${REL} (image pinned to :${REL})"
+
+          # Push ONLY the tag ref, authenticated via the token in an extraheader
+          # (checkout used persist-credentials:false). main is not pushed.
+          AUTH=$(printf 'x-access-token:%s' "${GH_TOKEN}" | base64)
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${AUTH}" \
+            push "https://github.com/${REPO}.git" "refs/tags/${REL}"
+          echo "Pushed tag ${REL} (action.yml pinned; main untouched; no release event emitted)."
