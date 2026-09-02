@@ -202,7 +202,9 @@ jobs:
           REPO: ${{ steps.lowercase-repo.outputs.repo }}
           REL: ${{ inputs.release-version }}
         run: |
-          if git ls-remote --exit-code --tags origin "refs/tags/${REL}" >/dev/null 2>&1; then
+          # Existence check via the API (GH_TOKEN-authenticated) — the local
+          # `origin` remote has no credentials (persist-credentials:false).
+          if gh api "repos/${REPO}/git/ref/tags/${REL}" >/dev/null 2>&1; then
             echo "Tag ${REL} already exists; skipping tag creation."
             exit 0
           fi
@@ -225,9 +227,7 @@ jobs:
           git commit -m "release ${REL}: pin action.yml image to :${REL}"
           git tag -a "${REL}" -m "Custom flavor ${REL} (image pinned to :${REL})"
 
-          # Push ONLY the tag ref, authenticated via the token in an extraheader
-          # (checkout used persist-credentials:false). main is not pushed.
-          AUTH=$(printf 'x-access-token:%s' "${GH_TOKEN}" | base64)
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${AUTH}" \
-            push "https://github.com/${REPO}.git" "refs/tags/${REL}"
+          # Push ONLY the tag ref (checkout used persist-credentials:false, so
+          # authenticate with the token in the push URL). main is not pushed.
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" "refs/tags/${REL}"
           echo "Pushed tag ${REL} (action.yml pinned; main untouched; no release event emitted)."
